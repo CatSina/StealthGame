@@ -4,6 +4,7 @@
 #include "FPSHUD.h"
 #include "FPSCharacter.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Kismet/GameplayStatics.h"
 
 AFPSGameMode::AFPSGameMode()
 {
@@ -20,6 +21,31 @@ void AFPSGameMode::CompleteMission(APawn* InstigatorPawn)
 	if (InstigatorPawn)
 	{
 		InstigatorPawn->DisableInput(nullptr);
+
+		if (FinishCameraClass)
+		{
+			TArray<AActor*> ReturnedActores;
+			UGameplayStatics::GetAllActorsOfClass(this, FinishCameraClass, ReturnedActores);
+
+			//change view target if any valid actor found
+			if (ReturnedActores.Num() > 0)
+			{
+				AActor* NewViewTarget = ReturnedActores[0];
+
+				APlayerController* PC = Cast<APlayerController>(InstigatorPawn->GetController());
+
+				if (PC)
+				{
+					PC->SetViewTargetWithBlend(NewViewTarget, 0.5f, EViewTargetBlendFunction::VTBlend_Cubic);
+				}
+			}
+		}
+		else
+		{
+				UE_LOG(LogTemp, Warning, TEXT("FinishCamera is nullptr. please update the GameMode class with valid subclass. cannot change view target"));
+		}
 	}
 	OnMissionCompleted(InstigatorPawn);
+
+	
 }
